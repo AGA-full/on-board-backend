@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/onboard
+    username: postgres
+    password: postgres
+  liquibase:
+    enabled: true
+    drop-first: true
+    default-schema: public
+

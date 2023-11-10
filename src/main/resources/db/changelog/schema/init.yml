@@ -1,0 +1,334 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_tables
+      author: agatikc
+      changes:
+        - sql: create extension if not exists "uuid-ossp";
+        - createTable:
+            tableName: company
+            remarks: Информация о компаниях
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  defaultValueComputed: uuid_generate_v4()
+                  remarks: Идентификатор компании
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(128)
+                  remarks: Название компании
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: worker
+            remarks: Информация о сотрудниках
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  remarks: Идентификатор сотрудника
+                  defaultValueComputed: uuid_generate_v4()
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: username
+                  type: varchar(50)
+                  remarks: Идентификатор пользователя
+                  constraints:
+                    nullable: false
+              - column:
+                  name: company_id
+                  type: uuid
+                  remarks: Компания пользователя
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(50)
+                  remarks: Пароль
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(30)
+                  remarks: Имя сотрудника
+                  constraints:
+                    nullable: false
+              - column:
+                  name: team_id
+                  type: uuid
+                  remarks: Команда сотрудника внутри компании
+                  constraints:
+                    nullable: false
+              - column:
+                  name: head_id
+                  type: uuid
+                  remarks: Непосредственный руководитель
+                  constraints:
+                    nullable: true
+              - column:
+                  name: hr_id
+                  type: uuid
+                  remarks: HR сотрудника
+                  constraints:
+                    nullable: true
+        - createTable:
+            tableName: team
+            remarks: Информация о командах в компании
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  remarks: Идентификатор команды
+                  defaultValueComputed: uuid_generate_v4()
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(30)
+                  remarks: Название команды
+                  constraints:
+                    nullable: false
+              - column:
+                  name: company_id
+                  type: uuid
+                  remarks: Идентификатор компании
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_team_id
+                  type: uuid
+                  remarks: Идентификатор родительской команды
+                  constraints:
+                    nullable: true
+        - createTable:
+            tableName: onboarding
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  remarks: Идентификатор инструкции онбординга
+                  defaultValueComputed: uuid_generate_v4()
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(128)
+                  remarks: Название онбординга
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notion_page_id
+                  type: varchar(128)
+                  remarks: Идентификатор документа инструкции онбординга
+                  constraints:
+                    nullable: false
+              - column:
+                  name: company_id
+                  type: uuid
+                  remarks: Идентификатор компании инструкции
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: onboarding_tag
+            columns:
+              - column:
+                  name: tag_id
+                  type: int
+                  remarks: Идентификатор тэга
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_onboarding_tag
+              - column:
+                  name: onboarding_id
+                  type: uuid
+                  remarks: Идентификатор онбординга
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_onboarding_tag
+              - column:
+                  name: tag_rank
+                  type: int
+                  remarks: Ранг тэга
+                  constraints:
+                    nullable: true
+        - createTable:
+            tableName: tag
+            columns:
+              - column:
+                  name: id
+                  type: int
+                  remarks: Идентификатор тэга
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: varchar(30)
+                  remarks: Описание тэга
+                  constraints:
+                    nullable: false
+              - column:
+                  name: color
+                  type: varchar(7)
+                  remarks: Цвет тэга
+                  constraints:
+                    checkConstraint: color is null or color ~* '^#[a-f0-9]{6}$'
+        - sql: drop type if exists doc_role; create type doc_role as enum ('AUTHOR', 'EDITOR', 'INSTRUCTOR');
+        - createTable:
+            tableName: onboarding_document
+            remarks: Отношение сотрудников к документу онбординга
+            columns:
+              - column:
+                  name: worker_id
+                  type: uuid
+                  remarks: Идентификатор сотрудника
+                  constraints:
+                    nullable: false
+              - column:
+                  name: onboarding_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: doc_role
+                  remarks: Роль сотрудника в процессе работы над документом онбординга
+                  constraints:
+                    nullable: true
+        - sql: drop type if exists recommender; create type recommender as enum ('HEAD', 'HR', 'SYSTEM', 'OWN');
+        - createTable:
+            tableName: onboarding_process
+            remarks: Отношение сотрудников к процессу онбординга
+            columns:
+              - column:
+                  name: worker_id
+                  type: uuid
+                  remarks: Идентификатор сотрудника, которому назначен онбординг
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_onboarding_process
+              - column:
+                  name: onboarding_id
+                  type: uuid
+                  remarks: Идентификатор инструкции
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_onboarding_process
+              - column:
+                  name: recommender
+                  type: recommender
+                  remarks: Принцип рекомендации, по которому проводится обординг
+                  constraints:
+                    nullable: false
+              - column:
+                  name: instructor_id
+                  type: uuid
+                  remarks: Инструктор в процессе онбординга
+                  constraints:
+                    nullable: true
+              - column:
+                  name: progress
+                  type: varchar(256)
+                  remarks: На каком этапе сейчас онбординг
+                  constraints:
+                    nullable: true
+              - column:
+                  name: deadline
+                  type: datetime
+                  remarks: Дата дедлайна по онбордингу
+                  constraints:
+                    nullable: true
+  - changeSet:
+      id: add_constraints
+      author: agatikc
+      changes:
+        - addUniqueConstraint:
+            tableName: worker
+            columnNames: username, company_id
+        - addForeignKeyConstraint:
+            constraintName: fk_worker_company
+            baseTableName: worker
+            baseColumnNames: company_id
+            referencedTableName: company
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_worker_team
+            baseTableName: worker
+            baseColumnNames: team_id
+            referencedTableName: team
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_worker_head
+            baseTableName: worker
+            baseColumnNames: head_id
+            referencedTableName: worker
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_worker_hr
+            baseTableName: worker
+            baseColumnNames: hr_id
+            referencedTableName: worker
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_parent_team
+            baseTableName: team
+            baseColumnNames: parent_team_id
+            referencedTableName: team
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_team_company
+            baseTableName: team
+            baseColumnNames: company_id
+            referencedTableName: company
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_onboarding_company
+            baseTableName: onboarding
+            baseColumnNames: company_id
+            referencedTableName: company
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_tags_onboarding
+            baseTableName: onboarding_tag
+            baseColumnNames: onboarding_id
+            referencedTableName: onboarding
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_tags_tag
+            baseTableName: onboarding_tag
+            baseColumnNames: tag_id
+            referencedTableName: tag
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_document_onboarding
+            baseTableName: onboarding_document
+            baseColumnNames: onboarding_id
+            referencedTableName: onboarding
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_document_worker
+            baseTableName: onboarding_document
+            baseColumnNames: worker_id
+            referencedTableName: worker
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_onboarding_process_worker
+            baseTableName: onboarding_process
+            baseColumnNames: worker_id
+            referencedTableName: worker
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_onboarding_process_instruction
+            baseTableName: onboarding_process
+            baseColumnNames: onboarding_id
+            referencedTableName: onboarding
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_onboarding_process_instructor
+            baseTableName: onboarding_process
+            baseColumnNames: instructor_id
+            referencedTableName: worker
+            referencedColumnNames: id
