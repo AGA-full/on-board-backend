@@ -1,6 +1,7 @@
 package com.aga.onboard.repository
 
 import com.aga.onboard.enums.DocRole
+import com.aga.onboard.enums.Recommender
 import com.aga.onboard.model.common.OnboardingRepositoryAction
 import com.aga.onboard.model.common.OnboardingRepositoryError
 import com.aga.onboard.model.common.OnboardingTagDto
@@ -8,9 +9,9 @@ import com.aga.onboard.model.internal.OnboardingDtoRaw
 import com.aga.onboard.tables.daos.OnboardingDao
 import com.aga.onboard.tables.records.OnboardingTagRecord
 import com.aga.onboard.tables.references.*
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.jooq.Configuration
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 import java.util.*
 
 const val MAIN_TAG_RANK = 1
@@ -18,12 +19,30 @@ const val MAIN_TAG_RANK = 1
 @Repository
 class OnboardingRepository(
     configuration: Configuration,
-    val objectMapper: ObjectMapper,
 ) : OnboardingDao(configuration) {
     fun createOnboarding(title: String, notionPageId: String, companyId: UUID): UUID =
         ctx().insertInto(ONBOARDING)
             .columns(ONBOARDING.TITLE, ONBOARDING.NOTION_PAGE_ID, ONBOARDING.COMPANY_ID)
             .values(title, notionPageId, companyId)
+            .returningResult(ONBOARDING.ID)
+            .fetchOne()
+            ?.getValue(ONBOARDING.ID) ?: throw OnboardingRepositoryError(action = OnboardingRepositoryAction.CREATE)
+
+    fun createOnboardingProcess(
+        workerId: UUID,
+        recommendationType: Recommender,
+        onboardingId: UUID,
+        instructorId: UUID?,
+        deadline: LocalDateTime?, ): UUID =
+        ctx().insertInto(ONBOARDING_PROCESS)
+            .columns(
+                ONBOARDING_PROCESS.WORKER_ID,
+                ONBOARDING_PROCESS.RECOMMENDER,
+                ONBOARDING_PROCESS.ONBOARDING_ID,
+                ONBOARDING_PROCESS.INSTRUCTOR_ID,
+                ONBOARDING_PROCESS.DEADLINE
+                )
+            .values(workerId, recommendationType, onboardingId, instructorId, deadline)
             .returningResult(ONBOARDING.ID)
             .fetchOne()
             ?.getValue(ONBOARDING.ID) ?: throw OnboardingRepositoryError(action = OnboardingRepositoryAction.CREATE)
@@ -159,4 +178,10 @@ class OnboardingRepository(
             )
             .fetchInto(OnboardingDtoRaw::class.java)
             .groupBy { it.workerId!! }
+
+    fun getOnboardingsByTag(tagId: Int): List<UUID> =
+        ctx().select(ONBOARDING_TAG.ONBOARDING_ID)
+            .from(ONBOARDING_TAG)
+            .where(ONBOARDING_TAG.TAG_ID.eq(tagId))
+            .fetchInto(UUID::class.java)
 }

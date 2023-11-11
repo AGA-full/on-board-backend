@@ -7,6 +7,8 @@ abstract class Usecase<Request, Response, Error> {
     abstract fun execute(request: Request): UseCaseResult<Response, Error>
 }
 
+class EmptySuccess()
+
 class UseCaseResult<Response, Error> private constructor(
     val success: Response? = null,
     val error: Error? = null,
@@ -20,6 +22,8 @@ class UseCaseResult<Response, Error> private constructor(
             UseCaseResult(success = success)
 
         fun <Response, Error> error(error: Error): UseCaseResult<Response, Error> = UseCaseResult(error = error)
+
+        fun <Error> successEmpty(): UseCaseResult<EmptySuccess, Error> = UseCaseResult(success = EmptySuccess())
     }
 
     val status: Status
@@ -28,6 +32,7 @@ class UseCaseResult<Response, Error> private constructor(
             error != null -> Status.ERROR
             else -> throw IllegalStateException("UsecaseResult without handles")
         }
+
 
     fun errorOrThrow(): Error = error ?: throw NoSuchElementException("Error is empty: result=$this")
 

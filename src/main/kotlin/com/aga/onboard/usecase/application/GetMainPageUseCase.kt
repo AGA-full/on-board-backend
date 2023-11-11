@@ -2,7 +2,7 @@ package com.aga.onboard.usecase.application
 
 import com.aga.onboard.model.common.OnboardingBlock
 import com.aga.onboard.model.common.WorkerRole
-import com.aga.onboard.service.internal.OnboardingService
+import com.aga.onboard.service.internal.OnboardingListService
 import com.aga.onboard.usecase.common.UseCaseResult
 import com.aga.onboard.usecase.common.Usecase
 import io.swagger.v3.oas.annotations.media.Schema
@@ -24,22 +24,22 @@ data class MainPageResponse(
 
 @Component
 class GetMainPageUseCase(
-    private val onboardingService: OnboardingService,
+    private val onboardingListService: OnboardingListService,
 ) : Usecase<MainPageRequest, MainPageResponse, Unit>() {
     override fun execute(request: MainPageRequest): UseCaseResult<MainPageResponse, Unit> =
         when (request.role) {
-            WorkerRole.BASIC -> onboardingService.getOnboardingList(
+            WorkerRole.BASIC -> onboardingListService.getOnboardingList(
                 request.workerId,
-                OnboardingService.OnboardingGroup.NOW,
-                OnboardingService.OnboardingGroup.RECOMMENDED,
-                OnboardingService.OnboardingGroup.NEW,
+                OnboardingListService.OnboardingGroup.NOW,
+                OnboardingListService.OnboardingGroup.RECOMMENDED,
+                OnboardingListService.OnboardingGroup.NEW,
             )
-            WorkerRole.INSTRUCTOR -> onboardingService.getOnboardingList(
+            WorkerRole.INSTRUCTOR -> onboardingListService.getOnboardingList(
                 request.workerId,
-                OnboardingService.OnboardingGroup.AUTHOR,
-                OnboardingService.OnboardingGroup.INSTRUCTOR,
+                OnboardingListService.OnboardingGroup.AUTHOR,
+                OnboardingListService.OnboardingGroup.INSTRUCTOR,
             )
-            WorkerRole.HEAD -> onboardingService.getHeadOnboardings(request.workerId)
-            WorkerRole.HR -> onboardingService.getHrOnboardings(request.workerId)
+            WorkerRole.HEAD -> onboardingListService.getHeadOnboardings(request.workerId)
+            WorkerRole.HR -> onboardingListService.getHrOnboardings(request.workerId)
         }.let { UseCaseResult.success(MainPageResponse(blocks = it)) }
 }

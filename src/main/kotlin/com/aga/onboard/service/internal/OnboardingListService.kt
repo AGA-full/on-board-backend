@@ -5,12 +5,11 @@ import com.aga.onboard.model.common.OnboardingDto
 import com.aga.onboard.model.internal.OnboardingBlockRaw
 import com.aga.onboard.model.internal.OnboardingDtoRaw
 import com.aga.onboard.repository.OnboardingRepository
-import com.aga.onboard.usecase.application.MainPageRequest
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class OnboardingService(
+class OnboardingListService(
     val onboardingRepository: OnboardingRepository,
     val workerService: WorkerService,
 ) {
