@@ -164,9 +164,9 @@
                 <configuration>
                     <jdbc>
                         <driver>org.postgresql.Driver</driver>
-                        <url>jdbc:postgresql://localhost:5432/onboard</url>
-                        <user>postgres</user>
-                        <password>postgres</password>
+                        <url>jdbc:postgresql://localhost:5567/onboard</url>
+                        <user>agata</user>
+                        <password>16jrnz,hz</password>
                     </jdbc>
                     <logging>WARN</logging>
 
